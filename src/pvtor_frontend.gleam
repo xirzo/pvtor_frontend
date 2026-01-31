@@ -58,11 +58,37 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   }
 }
 
-fn view(model: Model) -> Element(Msg) {
-  html.div([attribute.class("h-dvh flex flex-row")], [
-    html.div([attribute.class("bg-blue-500 basis-2/10")], [html.text("Hello, World")]),
+fn view_namespace_card(namespace_name: String) -> Element(Msg) {
+  html.div([attribute.class("bg-yellow-500 items-center")], [
+    html.h2([], [html.text(namespace_name)])
+  ])
+}
 
-    html.div([attribute.class("flex flex-col basis-8/10")], [
+fn view(model: Model) -> Element(Msg) {
+  let namespaces = ["Work", "Personal", "Ideas"]
+
+  html.div([attribute.class("h-dvh flex flex-col md:flex-row flex-col-reverse")], [
+    // TODO: make this section appear by button on mobile
+    //  START
+    html.div([attribute.class("flex flex-col bg-blue-500 basis-1/10 md:basis-2/10 2xl:basis-1/10")], [
+
+      html.div([attribute.class("flex flex-col md:basis-1/20")], [
+	html.text("Pvtor Dashboard"),
+      ]),
+
+      html.div([attribute.class("bg-yellow-500 grid grid-cols-[auto_7rem] items-center")], [
+	html.text("Namespaces"),
+
+	html.button([attribute.class("bg-red-500")], [
+	  html.text("New namespace")
+	])
+      ]),
+
+      html.div([], list.map(namespaces, view_namespace_card(_))),
+    ]),
+    // END
+
+    html.div([attribute.class("flex flex-col basis-9/10 md:basis-8/10 2xl:basis-9/10")], [
       html.div([attribute.class("bg-red-500 basis-1/20 content-evenly px-6")],
 	[
 	  html.div([attribute.class("grid grid-cols-[auto_5rem] justify-stretch gap-5")], [
@@ -79,7 +105,7 @@ fn view(model: Model) -> Element(Msg) {
 	]
       ),
 
-      html.div([attribute.class("bg-green-500 basis-19/20")], [html.text("Hello, World")]),
+      html.div([attribute.class("bg-green-500 basis-19/20")], []),
     ])
   ])
 }
