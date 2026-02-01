@@ -1,1 +1,133 @@
-@import "tailwindcss";
+body {
+    margin: 0;
+}
+
+.main {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 768px) {
+    .main {
+        flex-direction: row;
+    }
+}
+
+.sidebar {
+    display: none;
+    flex-direction: column;
+    background-color: #3b82f6;
+    /*position: absolute;*/
+}
+
+.sidebar-open {
+    display: flex;
+    flex-direction: column;
+    background-color: #3b82f6;
+}
+
+.sidebar-header {
+    display: flex;
+    flex-direction: row;
+    background-color: #3b82f6;
+}
+
+@media (min-width: 768px) {
+    .sidebar {
+	display: block;
+    }
+
+    .sidebar-header {
+        flex-basis: 5%;
+    }
+}
+
+.namespaces-section {
+    background-color: #10b981; 
+    display: grid;
+    grid-template-columns: auto 7rem;
+    align-items: center;
+}
+
+.namespace-card {
+    background-color: #eab308; 
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+@media (min-width: 768px) {
+    .main-content {
+        flex-basis: 80%;
+    }
+}
+
+@media (min-width: 1536px) {
+    .main-content {
+        flex-basis: 90%;
+    }
+}
+
+.top-bar {
+    background-color: #ef4444;
+    flex-basis: 5%;
+    content-evenly: space-evenly;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    align-content: center;
+}
+
+.search-section {
+    display: grid;
+    grid-template-columns: auto 5rem;
+    justify-content: stretch;
+    gap: 1.25rem;
+}
+
+.search-input {
+    background-color: #eab308;
+    placeholder-color: inherit;
+}
+
+.search-input::placeholder {
+    color: inherit;
+    opacity: 0.6;
+}
+
+.mobile-menu-button {
+    position: absolute;
+    background-color: #ef4444;
+    z-index: 1000;
+}
+
+@media (max-width: 767px) {
+    .mobile-menu-button {
+        display: block;
+    }
+}
+
+@media (min-width: 1024px) {
+    .mobile-menu-button {
+        display: none;
+    }
+}
+
+.new-namespace-button {
+    background-color: #ef4444;
+}
+
+.new-note-button {
+    background-color: #10b981;
+}
+
+.content-area {
+    background-color: #10b981;
+    flex-basis: 95%;
+}
