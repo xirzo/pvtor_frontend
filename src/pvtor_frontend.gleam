@@ -15,18 +15,16 @@ const backend_url = "http://localhost:5000/api/"
 
 fn get_notes() -> Effect(Msg) {
   let decoder = {
-    use note_id <- decode.field("note_id", decode.int)
+    use note_id <- decode.field("noteId", decode.int)
     use content <- decode.field("content", decode.string)
-    use creation_date <- decode.field("creation_date", decode.string)
-    use update_date <- decode.field("update_date", decode.string)
-    use namespace_id <- decode.field("namespace_id", decode.int)
-    use is_hidden <- decode.field("is_hidden", decode.bool)
+    use creation_date <- decode.field("creationDate", decode.string)
+    use namespace_id <- decode.field("noteNamespaceId", decode.optional(decode.int))
+    use is_hidden <- decode.field("isHidden", decode.bool)
 
     decode.success(Note(
       note_id:,
       content:,
       creation_date:,
-      update_date:,
       namespace_id:,
       is_hidden:,
     ))
@@ -43,8 +41,7 @@ type Note {
     note_id: Int,
     content: String,
     creation_date: String,
-    update_date: String,
-    namespace_id: Int,
+    namespace_id: Option(Int),
     is_hidden: Bool,
   )
 }
@@ -100,7 +97,7 @@ fn view_content(current_note: Option(Note)) -> Element(Msg) {
       html.text("Selected note placeholder")
     ])
 
-    None ->  html.div([attribute.class("content-view-empty")], [
+    None ->  html.div([attribute.class("content-view")], [
 	html.p([], [html.text("No note selected")]),
     ])
   }
