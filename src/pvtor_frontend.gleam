@@ -1,4 +1,5 @@
 import gleam/bool
+import gleam/option.{None, type Option, Some}
 import gleam/dynamic/decode
 import gleam/list
 import lustre
@@ -49,12 +50,12 @@ type Note {
 }
 
 type Model {
-  Model(notes: List(Note), is_mobile_sidebar_toggled: Bool)
+  Model(selected_note: Option(Note), notes: List(Note), is_mobile_sidebar_toggled: Bool)
 }
 
 fn init(_args) -> #(Model, Effect(Msg)) {
   let effect = get_notes()
-  #(Model(notes: [], is_mobile_sidebar_toggled: False), effect)
+  #(Model(selected_note: None, notes: [], is_mobile_sidebar_toggled: False), effect)
 }
 
 type Msg {
@@ -91,6 +92,18 @@ fn view_note_card(note: Note) -> Element(Msg) {
   html.div([attribute.class("note-card")], [
     html.p([], [html.text(note.content)]),
   ])
+}
+
+fn view_content(current_note: Option(Note)) -> Element(Msg) {
+  case current_note {
+    Some(_) -> html.div([attribute.class("content-view")], [
+      html.text("Selected note placeholder")
+    ])
+
+    None ->  html.div([attribute.class("content-view-empty")], [
+	html.p([], [html.text("No note selected")]),
+    ])
+  }
 }
 
 fn view(model: Model) -> Element(Msg) {
@@ -141,7 +154,11 @@ fn view(model: Model) -> Element(Msg) {
 
       html.div(
         [attribute.class("content-area")],
-        list.map(model.notes, view_note_card),
+	[
+	  html.div([attribute.class("content-notes")], list.map(model.notes, view_note_card)),
+
+	  view_content(model.selected_note)
+	],
       ),
     ]),
   ])
