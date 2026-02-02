@@ -45,7 +45,8 @@ type Model {
 }
 
 fn init(_args) -> #(Model, Effect(Msg)) {
-  #(Model(notes: [], is_mobile_sidebar_toggled: False), effect.none())
+  let effect = get_notes()
+  #(Model(notes: [], is_mobile_sidebar_toggled: False), effect)
 }
 
 type Msg {
