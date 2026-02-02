@@ -9,27 +9,71 @@ import lustre/element/html
 import lustre/event
 import rsvp
 
+// TODO: get from env
+const backend_url = "http://localhost:5000/api/"
+
+fn get_notes() -> Effect(Msg) {
+  let decoder = {
+    use note_id <- decode.field("note_id", decode.int)
+    use content <- decode.field("content", decode.string)
+    use creation_date <- decode.field("creation_date", decode.string)
+    use update_date <- decode.field("update_date", decode.string)
+    use namespace_id <- decode.field("namespace_id", decode.int)
+    use is_hidden <- decode.field("is_hidden", decode.bool)
+
+    decode.success(Note(note_id:, content:, creation_date:,
+      update_date:, namespace_id:, is_hidden:))
+  }
+
+  let url = backend_url <> "notes"
+  let handler = rsvp.expect_json(decode.list(decoder), ApiReturnedNotes)
+
+  rsvp.get(url, handler)
+}
+
+type Note {
+  Note(note_id: Int,
+	content: String,
+	creation_date: String,
+	update_date: String,
+	namespace_id: Int,
+	is_hidden: Bool)
+}
+
 type Model {
-  Model(is_mobile_sidebar_toggled: Bool)
+  Model(notes: List(Note), is_mobile_sidebar_toggled: Bool)
 }
 
 fn init(_args) -> #(Model, Effect(Msg)) {
-  #(Model(is_mobile_sidebar_toggled: False), effect.none())
+  #(Model(notes: [], is_mobile_sidebar_toggled: False), effect.none())
 }
 
 type Msg {
   UserClickedSidebarButton
+  ApiReturnedNotes(Result(List(Note), rsvp.Error))
 }
 
 fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   case msg {
-    UserClickedSidebarButton -> #(Model(..model, is_mobile_sidebar_toggled: !model.is_mobile_sidebar_toggled), effect.none())
+  UserClickedSidebarButton -> #(Model(..model, is_mobile_sidebar_toggled: !model.is_mobile_sidebar_toggled), effect.none())
+
+  ApiReturnedNotes(Ok(notes)) -> #(Model(..model, notes: list.append(model.notes, notes)), effect.none())
+
+  ApiReturnedNotes(Error(_)) -> #(model, effect.none())
   }
 }
 
 fn view_namespace_card(namespace_name: String) -> Element(Msg) {
   html.div([attribute.class("namespace-card")], [
     html.p([], [html.text(namespace_name)])
+  ])
+}
+
+fn view_note_card(note: Note) -> Element(Msg) {
+  html.div([attribute.class("note-card")], [
+    html.p([], [
+      html.text(note.content)
+    ])
   ])
 }
 
@@ -84,9 +128,7 @@ fn view(model: Model) -> Element(Msg) {
         ]
       ),
 
-      html.div([attribute.class("content-area")], [
-	html.text("Content area")
-      ]),
+      html.div([attribute.class("content-area")], list.map(model.notes, view_note_card(_))),
     ])
   ])
 }
