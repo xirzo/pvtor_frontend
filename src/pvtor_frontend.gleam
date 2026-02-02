@@ -166,3 +166,11 @@ pub fn main() {
   let assert Ok(_) = lustre.start(app, "#app", Nil)
   Nil
 }
+
+// TODO: add note names to note representation
+// TODO: namespace creation
+// TODO: note creation
+// TODO: note search with queries
+// TODO: note selection
+// TODO: namespace selection
+// TODO: filter notes by namespace
