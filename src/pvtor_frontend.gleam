@@ -170,9 +170,7 @@ pub fn main() {
   Nil
 }
 
-// TODO: add note names to note representation
 // TODO: namespace creation
-// TODO: note creation
 // TODO: note search with queries
 // TODO: namespace selection
 // TODO: filter notes by namespace
