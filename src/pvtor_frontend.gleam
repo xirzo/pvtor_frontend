@@ -2,6 +2,8 @@ import gleam/bool
 import gleam/option.{None, type Option, Some}
 import gleam/dynamic/decode
 import gleam/list
+import gleam/json
+import plinth/javascript/storage
 import lustre
 import lustre/attribute
 import lustre/effect.{type Effect}
@@ -9,27 +11,30 @@ import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
 import rsvp
+import varasto
 
 // TODO: get from env
 const backend_url = "http://localhost:5000/api/"
 
+fn decode_note() {
+  use note_id <- decode.field("noteId", decode.int)
+  use content <- decode.field("content", decode.string)
+  use creation_date <- decode.field("creationDate", decode.string)
+  use namespace_id <- decode.field("noteNamespaceId", decode.optional(decode.int))
+  use is_hidden <- decode.field("isHidden", decode.bool)
+
+  decode.success(Note(
+    note_id:,
+    content:,
+    creation_date:,
+    namespace_id:,
+    is_hidden:,
+  ))
+}
+
+
 fn get_notes() -> Effect(Msg) {
-  let decoder = {
-    use note_id <- decode.field("noteId", decode.int)
-    use content <- decode.field("content", decode.string)
-    use creation_date <- decode.field("creationDate", decode.string)
-    use namespace_id <- decode.field("noteNamespaceId", decode.optional(decode.int))
-    use is_hidden <- decode.field("isHidden", decode.bool)
-
-    decode.success(Note(
-      note_id:,
-      content:,
-      creation_date:,
-      namespace_id:,
-      is_hidden:,
-    ))
-  }
-
+  let decoder = decode_note()
   let url = backend_url <> "notes"
   let handler = rsvp.expect_json(decode.list(decoder), ApiReturnedNotes)
 
@@ -50,17 +55,56 @@ type Model {
   Model(selected_note: Option(Note), notes: List(Note), is_mobile_sidebar_toggled: Bool)
 }
 
+fn get_selected_note() -> Effect(Msg) {
+  let assert Ok(local) = storage.local()
+  let s = varasto.new(local, note_reader(),  note_writer())
+
+  effect.from(fn(dispatch) {
+    case varasto.get(s, "selected_note") {
+      Ok(note) -> dispatch(LocalStorageReturnedSelectedNote(Ok(note)))
+      Error(err) -> dispatch(LocalStorageReturnedSelectedNote(Error(err)))
+    }
+  })
+}
+
 fn init(_args) -> #(Model, Effect(Msg)) {
-  let effect = get_notes()
-  #(Model(selected_note: None, notes: [], is_mobile_sidebar_toggled: False), effect)
+  let effects = effect.batch([
+    get_notes(),
+    get_selected_note()
+  ])
+
+  #(Model(selected_note: None, notes: [], is_mobile_sidebar_toggled: False), effects)
 }
 
 type Msg {
   UserClickedSidebarButton
+  UserClickedNoteCard(Note)
   ApiReturnedNotes(Result(List(Note), rsvp.Error))
+  LocalStorageReturnedSelectedNote(Result(Note, varasto.ReadError))
+}
+
+// TODO: use decode_note
+fn note_reader() {
+  use content <- decode.field("content", decode.string)
+
+  echo content
+
+  decode.success(Note(1, content, "", Some(1), False,))
+}
+
+// TODO: fill in all the values
+fn note_writer() {
+  fn(n: Note) {
+    json.object([
+      #("content", json.string(n.content)),
+    ])
+  }
 }
 
 fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
+  let assert Ok(local) = storage.local()
+  let s = varasto.new(local, note_reader(),  note_writer())
+
   case msg {
     UserClickedSidebarButton -> #(
       Model(
@@ -70,12 +114,37 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
+    UserClickedNoteCard(note) -> #(
+      Model(..model, selected_note: Some(note)),
+      case model.selected_note {
+	None -> effect.none()
+	Some(note) -> effect.from(fn(_) {
+	// TODO: check for errors
+	  let _ = varasto.set(s, "selected_note", note)
+	  Nil
+	})
+      }
+    )
+
+    LocalStorageReturnedSelectedNote(Ok(note)) -> #(
+      Model(..model, selected_note: Some(note)),
+      effect.none()
+    )
+      
+    LocalStorageReturnedSelectedNote(Error(err)) -> {
+      echo err
+      #(model, effect.none())
+    }
+
     ApiReturnedNotes(Ok(notes)) -> #(
       Model(..model, notes: list.append(model.notes, notes)),
       effect.none(),
     )
 
-    ApiReturnedNotes(Error(_)) -> #(model, effect.none())
+    ApiReturnedNotes(Error(err)) -> {
+      echo err
+      #(model, effect.none())
+    }
   }
 }
 
@@ -86,15 +155,18 @@ fn view_namespace_card(namespace_name: String) -> Element(Msg) {
 }
 
 fn view_note_card(note: Note) -> Element(Msg) {
-  html.div([attribute.class("note-card")], [
+  html.button([
+    attribute.class("note-card"),
+    event.on_click(UserClickedNoteCard(note)),
+  ], [
     html.p([], [html.text(note.content)]),
   ])
 }
 
 fn view_content(current_note: Option(Note)) -> Element(Msg) {
   case current_note {
-    Some(_) -> html.div([attribute.class("content-view")], [
-      html.text("Selected note placeholder")
+    Some(note) -> html.div([attribute.class("content-view")], [
+      html.text(note.content)
     ])
 
     None ->  html.div([attribute.class("content-view")], [
