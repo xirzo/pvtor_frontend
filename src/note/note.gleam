@@ -9,6 +9,7 @@ pub type Note {
     creation_date: String,
     namespace_id: Option(Int),
     is_hidden: Bool,
+    name: Option(String),
   )
 }
 
@@ -18,6 +19,7 @@ pub fn decode_note() {
   use creation_date <- decode.field("creationDate", decode.string)
   use namespace_id <- decode.field("noteNamespaceId", decode.optional(decode.int))
   use is_hidden <- decode.field("isHidden", decode.bool)
+  use name <- decode.field("name", decode.optional(decode.string))
 
   decode.success(Note(
     note_id:,
@@ -25,23 +27,24 @@ pub fn decode_note() {
     creation_date:,
     namespace_id:,
     is_hidden:,
+    name:
   ))
 }
 
-// TODO: use decode_note
 pub fn note_reader() {
-  use content <- decode.field("content", decode.string)
-
-  echo content
-
-  decode.success(Note(1, content, "", Some(1), False))
+  decode_note()
 }
 
 // TODO: fill in all the values
 pub  fn note_writer() {
   fn(n: Note) {
     json.object([
+      #("noteId", json.int(n.note_id)),
       #("content", json.string(n.content)),
+      #("creationDate", json.string(n.creation_date)),
+      #("noteNamespaceId", json.nullable(n.namespace_id, of: json.int)),
+      #("isHidden", json.bool(n.is_hidden)),
+      #("name", json.nullable(n.name, of: json.string))
     ])
   }
 }

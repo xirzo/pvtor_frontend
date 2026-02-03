@@ -180,11 +180,22 @@ button:focus {
     background-color: #eab308;
 }
 
-
 .content-view {
     background-color: #3b82f6;
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.note-content {
+    background-color: #ef4444;
+    display: flex;
+    flex-direction: column;
+    height: 90%;
+    flex-basis: 60%;
+}
+
+.note-content-edit-button {
+    background-color: #eab308;
 }

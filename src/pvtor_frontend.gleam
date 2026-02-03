@@ -9,6 +9,7 @@ import lustre/element/html
 import lustre/event
 import note/note.{type Note}
 import note/note_api
+import note/note_view
 import msg.{type Msg}
 import varasto
 
@@ -93,19 +94,10 @@ fn view_namespace_card(namespace_name: String) -> Element(Msg) {
   ])
 }
 
-fn view_note_card(note: Note) -> Element(Msg) {
-  html.button([
-    attribute.class("note-card"),
-    event.on_click(msg.UserClickedNoteCard(note)),
-  ], [
-    html.p([], [html.text(note.content)]),
-  ])
-}
-
 fn view_content(current_note: Option(Note)) -> Element(Msg) {
   case current_note {
     Some(note) -> html.div([attribute.class("content-view")], [
-      html.text(note.content)
+      note_view.view_card(note)
     ])
 
     None ->  html.div([attribute.class("content-view")], [
@@ -163,7 +155,7 @@ fn view(model: Model) -> Element(Msg) {
       html.div(
         [attribute.class("content-area")],
 	[
-	  html.div([attribute.class("content-notes")], list.map(model.notes, view_note_card)),
+	  html.div([attribute.class("content-notes")], list.map(model.notes, note_view.view_note_card)),
 
 	  view_content(model.selected_note)
 	],
@@ -182,6 +174,5 @@ pub fn main() {
 // TODO: namespace creation
 // TODO: note creation
 // TODO: note search with queries
-// TODO: note selection
 // TODO: namespace selection
 // TODO: filter notes by namespace
