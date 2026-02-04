@@ -23,8 +23,12 @@ pub fn view_note_card(note: Note) -> Element(Msg) {
 }
 
 pub fn view_card(note: Note) -> Element(Msg) {
-  let time =
+  let creation_time =
     datetime.literal(note.creation_date)
+    |> datetime.format(tempo.Custom("dddd D, MMMM h:m, YYYY"))
+
+  let update_time =
+    datetime.literal(note.update_date)
     |> datetime.format(tempo.Custom("dddd D, MMMM h:m, YYYY"))
 
   let namespace_id = case note.namespace_id {
@@ -33,8 +37,8 @@ pub fn view_card(note: Note) -> Element(Msg) {
   }
 
   html.div([attribute.class("note-content")], [
-    html.b([], [html.text("Creation date")]),
-    html.p([], [html.text(time)]),
+    html.b([], [html.text("Update date")]),
+    html.p([], [html.text(update_time)]),
 
     html.b([], [html.text("Note content")]),
 
@@ -46,7 +50,8 @@ pub fn view_card(note: Note) -> Element(Msg) {
 
     html.b([], [html.text("Metadata")]),
 
-    html.p([], [html.text("Namespace ID: " <> namespace_id)]),
-    html.p([], [html.text("IsHidden ID: " <> bool.to_string(note.is_hidden))]),
+    html.p([], [html.text("Namespace Id: " <> namespace_id)]),
+    html.p([], [html.text("Is hidden: " <> bool.to_string(note.is_hidden))]),
+    html.p([], [html.text("Creation date: " <> creation_time)]),
   ])
 }
