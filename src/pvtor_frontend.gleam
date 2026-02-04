@@ -1,28 +1,32 @@
-import gleam/option.{type Option, None, Some}
 import gleam/list
-import plinth/javascript/storage
+import gleam/option.{type Option, None, Some}
 import lustre
 import lustre/attribute
 import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
+import msg.{type Msg}
 import note/note.{type Note}
 import note/note_api
 import note/note_view
-import msg.{type Msg}
+import plinth/javascript/storage
 import varasto
 
 // TODO: get from env
 const backend_url = "http://localhost:5000/api/"
 
 type Model {
-  Model(selected_note: Option(Note), notes: List(Note), is_mobile_sidebar_toggled: Bool)
+  Model(
+    selected_note: Option(Note),
+    notes: List(Note),
+    is_mobile_sidebar_toggled: Bool,
+  )
 }
 
 fn get_selected_note() -> Effect(Msg) {
   let assert Ok(local) = storage.local()
-  let s = varasto.new(local, note.note_reader(),  note.note_writer())
+  let s = varasto.new(local, note.note_reader(), note.note_writer())
 
   effect.from(fn(dispatch) {
     case varasto.get(s, "selected_note") {
@@ -33,12 +37,13 @@ fn get_selected_note() -> Effect(Msg) {
 }
 
 fn init(_args) -> #(Model, Effect(Msg)) {
-  let effects = effect.batch([
-    note_api.get_notes(backend_url),
-    get_selected_note()
-  ])
+  let effects =
+    effect.batch([note_api.get_notes(backend_url), get_selected_note()])
 
-  #(Model(selected_note: None, notes: [], is_mobile_sidebar_toggled: False), effects)
+  #(
+    Model(selected_note: None, notes: [], is_mobile_sidebar_toggled: False),
+    effects,
+  )
 }
 
 fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
@@ -57,20 +62,21 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     msg.UserClickedNoteCard(note) -> #(
       Model(..model, selected_note: Some(note)),
       case model.selected_note {
-	None -> effect.none()
-	Some(note) -> effect.from(fn(_) {
-	// TODO: check for errors
-	  let _ = varasto.set(s, "selected_note", note)
-	  Nil
-	})
-      }
+        None -> effect.none()
+        Some(note) ->
+          effect.from(fn(_) {
+            // TODO: check for errors
+            let _ = varasto.set(s, "selected_note", note)
+            Nil
+          })
+      },
     )
 
     msg.LocalStorageReturnedSelectedNote(Ok(note)) -> #(
       Model(..model, selected_note: Some(note)),
-      effect.none()
+      effect.none(),
     )
-      
+
     msg.LocalStorageReturnedSelectedNote(Error(err)) -> {
       echo err
       #(model, effect.none())
@@ -96,13 +102,13 @@ fn view_namespace_card(namespace_name: String) -> Element(Msg) {
 
 fn view_content(current_note: Option(Note)) -> Element(Msg) {
   case current_note {
-    Some(note) -> html.div([attribute.class("content-view")], [
-      note_view.view_card(note)
-    ])
+    Some(note) ->
+      html.div([attribute.class("content-view")], [note_view.view_card(note)])
 
-    None ->  html.div([attribute.class("content-view")], [
-	html.p([], [html.text("No note selected")]),
-    ])
+    None ->
+      html.div([attribute.class("content-view")], [
+        html.p([], [html.text("No note selected")]),
+      ])
   }
 }
 
@@ -152,14 +158,14 @@ fn view(model: Model) -> Element(Msg) {
         ]),
       ]),
 
-      html.div(
-        [attribute.class("content-area")],
-	[
-	  html.div([attribute.class("content-notes")], list.map(model.notes, note_view.view_note_card)),
+      html.div([attribute.class("content-area")], [
+        html.div(
+          [attribute.class("content-notes")],
+          list.map(model.notes, note_view.view_note_card),
+        ),
 
-	  view_content(model.selected_note)
-	],
-      ),
+        view_content(model.selected_note),
+      ]),
     ]),
   ])
 }
@@ -169,7 +175,6 @@ pub fn main() {
   let assert Ok(_) = lustre.start(app, "#app", Nil)
   Nil
 }
-
 // TODO: namespace creation
 // TODO: note search with queries
 // TODO: namespace selection

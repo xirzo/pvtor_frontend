@@ -1,8 +1,8 @@
+import gleam/dynamic/decode
 import lustre/effect.{type Effect}
+import msg.{type Msg, ApiReturnedNotes}
 import note/note
 import rsvp
-import msg.{type Msg, ApiReturnedNotes}
-import gleam/dynamic/decode
 
 pub fn get_notes(backend_url: String) -> Effect(Msg) {
   let decoder = note.decode_note()

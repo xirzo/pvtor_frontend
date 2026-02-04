@@ -1,6 +1,6 @@
-import gleam/option.{type Option, Some}
 import gleam/dynamic/decode
 import gleam/json
+import gleam/option.{type Option, Some}
 
 pub type Note {
   Note(
@@ -17,7 +17,10 @@ pub fn decode_note() {
   use note_id <- decode.field("noteId", decode.int)
   use content <- decode.field("content", decode.string)
   use creation_date <- decode.field("creationDate", decode.string)
-  use namespace_id <- decode.field("noteNamespaceId", decode.optional(decode.int))
+  use namespace_id <- decode.field(
+    "noteNamespaceId",
+    decode.optional(decode.int),
+  )
   use is_hidden <- decode.field("isHidden", decode.bool)
   use name <- decode.field("name", decode.optional(decode.string))
 
@@ -27,7 +30,7 @@ pub fn decode_note() {
     creation_date:,
     namespace_id:,
     is_hidden:,
-    name:
+    name:,
   ))
 }
 
@@ -36,7 +39,7 @@ pub fn note_reader() {
 }
 
 // TODO: fill in all the values
-pub  fn note_writer() {
+pub fn note_writer() {
   fn(n: Note) {
     json.object([
       #("noteId", json.int(n.note_id)),
@@ -44,7 +47,7 @@ pub  fn note_writer() {
       #("creationDate", json.string(n.creation_date)),
       #("noteNamespaceId", json.nullable(n.namespace_id, of: json.int)),
       #("isHidden", json.bool(n.is_hidden)),
-      #("name", json.nullable(n.name, of: json.string))
+      #("name", json.nullable(n.name, of: json.string)),
     ])
   }
 }
