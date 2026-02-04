@@ -6,7 +6,7 @@ pub type Namespace {
 }
 
 pub fn decode_namespace() {
-  use namespace_id <- decode.field("namespaceId", decode.int)
+  use namespace_id <- decode.field("noteNamespaceId", decode.int)
   use name <- decode.field("name", decode.string)
   use creation_date <- decode.field("creationDate", decode.string)
 
@@ -20,7 +20,7 @@ pub fn decode_namespace() {
 pub fn encode_namespace() {
   fn(n: Namespace) {
     json.object([
-      #("namespaceId", json.int(n.namespace_id)),
+      #("noteNamespaceId", json.int(n.namespace_id)),
       #("name", json.string(n.name)),
       #("creationDate", json.string(n.creation_date)),
     ])
