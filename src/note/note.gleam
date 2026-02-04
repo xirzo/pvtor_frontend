@@ -1,6 +1,6 @@
 import gleam/dynamic/decode
 import gleam/json
-import gleam/option.{type Option, Some}
+import gleam/option.{type Option}
 
 pub type Note {
   Note(

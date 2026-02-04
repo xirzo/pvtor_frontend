@@ -8,6 +8,8 @@ import lustre/element/html
 import lustre/event
 import msg.{type Msg}
 import note/note.{type Note}
+import namespace/namespace.{type Namespace}
+import namespace/namespace_api
 import note/note_api
 import note/note_view
 import plinth/javascript/storage
@@ -20,6 +22,7 @@ type Model {
   Model(
     selected_note: Option(Note),
     notes: List(Note),
+    namespaces: List(Namespace),
     is_mobile_sidebar_toggled: Bool,
   )
 }
@@ -38,10 +41,10 @@ fn get_selected_note() -> Effect(Msg) {
 
 fn init(_args) -> #(Model, Effect(Msg)) {
   let effects =
-    effect.batch([note_api.get_notes(backend_url), get_selected_note()])
+    effect.batch([note_api.get_notes(backend_url), get_selected_note(), namespace_api.get_namespaces(backend_url)])
 
   #(
-    Model(selected_note: None, notes: [], is_mobile_sidebar_toggled: False),
+    Model(selected_note: None, notes: [], namespaces: [], is_mobile_sidebar_toggled: False),
     effects,
   )
 }
@@ -91,12 +94,22 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       echo err
       #(model, effect.none())
     }
+
+    msg.ApiReturnedNamespaces(Ok(namespaces)) -> #(
+      Model(..model, namespaces: list.append(model.namespaces, namespaces)),
+      effect.none(),
+    )
+
+    msg.ApiReturnedNamespaces(Error(err)) -> {
+      echo err
+      #(model, effect.none())
+    }
   }
 }
 
-fn view_namespace_card(namespace_name: String) -> Element(Msg) {
+fn view_namespace_card(namespace: Namespace) -> Element(Msg) {
   html.div([attribute.class("namespace-card")], [
-    html.p([], [html.text(namespace_name)]),
+    html.p([], [html.text(namespace.name)]),
   ])
 }
 
@@ -113,8 +126,6 @@ fn view_content(current_note: Option(Note)) -> Element(Msg) {
 }
 
 fn view(model: Model) -> Element(Msg) {
-  let namespaces = ["Work", "Personal", "Ideas"]
-
   let sidebar_class = case model.is_mobile_sidebar_toggled {
     True -> "sidebar-open"
     False -> "sidebar"
@@ -141,7 +152,7 @@ fn view(model: Model) -> Element(Msg) {
         ]),
       ]),
 
-      html.div([], list.map(namespaces, view_namespace_card)),
+      html.div([], list.map(model.namespaces, view_namespace_card)),
     ]),
 
     html.div([attribute.class("main-content")], [
