@@ -10,4 +10,5 @@ pub type Msg {
   ApiReturnedNotes(Result(List(Note), rsvp.Error))
   ApiReturnedNamespaces(Result(List(Namespace), rsvp.Error))
   LocalStorageReturnedSelectedNote(Result(Note, varasto.ReadError))
+  LocalStorageReturnedSelectedNamespace(Result(Namespace, varasto.ReadError))
 }

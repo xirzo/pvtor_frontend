@@ -40,9 +40,21 @@ fn get_selected_note() -> Effect(Msg) {
   })
 }
 
+fn get_selected_namespace() -> Effect(Msg) {
+  let assert Ok(local) = storage.local()
+  let s = varasto.new(local, namespace.decode_namespace(), namespace.encode_namespace())
+
+  effect.from(fn(dispatch) {
+    case varasto.get(s, "selected_namespace") {
+      Ok(note) -> dispatch(msg.LocalStorageReturnedSelectedNamespace(Ok(note)))
+      Error(err) -> dispatch(msg.LocalStorageReturnedSelectedNamespace(Error(err)))
+    }
+  })
+}
+
 fn init(_args) -> #(Model, Effect(Msg)) {
   let effects =
-    effect.batch([note_api.get_notes(backend_url), get_selected_note(), namespace_api.get_namespaces(backend_url)])
+    effect.batch([note_api.get_notes(backend_url), get_selected_note(), namespace_api.get_namespaces(backend_url), get_selected_namespace()])
 
   #(
     Model(selected_note: None, selected_namespace: None, notes: [], namespaces: [], is_mobile_sidebar_toggled: False),
@@ -99,6 +111,16 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     )
 
     msg.LocalStorageReturnedSelectedNote(Error(err)) -> {
+      echo err
+      #(model, effect.none())
+    }
+
+    msg.LocalStorageReturnedSelectedNamespace(Ok(namespace)) -> #(
+      Model(..model, selected_namespace: Some(namespace)),
+      effect.none(),
+    )
+
+    msg.LocalStorageReturnedSelectedNamespace(Error(err)) -> {
       echo err
       #(model, effect.none())
     }
