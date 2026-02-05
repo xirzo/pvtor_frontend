@@ -20,6 +20,7 @@ const backend_url = "http://localhost:5000/api/"
 
 type Model {
   Model(
+    note_search_query: String,
     selected_note: Option(Note),
     selected_namespace: Option(Namespace),
     notes: List(Note),
@@ -55,7 +56,7 @@ fn get_selected_namespace() -> Effect(Msg) {
 fn init(_args) -> #(Model, Effect(Msg)) {
   let effects = effect.batch([get_selected_note(), get_selected_namespace(), namespace_api.get_namespaces(backend_url)])
 
-  #(Model(selected_note: None, selected_namespace: None, notes: [], namespaces: [], is_mobile_sidebar_toggled: False),
+  #(Model(note_search_query: "", selected_note: None, selected_namespace: None, notes: [], namespaces: [], is_mobile_sidebar_toggled: False),
     effects,
   )
 }
@@ -117,6 +118,20 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       #(model, effect.none())
     }
 
+    msg.UserUpdatedNoteSearchQuery(query) -> {      
+      case model.selected_namespace {
+	None -> {
+	  #(Model(..model, note_search_query: query), effect.none())
+	}
+	Some(namespace) -> {
+	  case query {
+	    "" -> #(Model(..model, note_search_query: query), note_api.get_namespace_notes(backend_url, namespace.namespace_id))
+	    _ -> #(Model(..model, note_search_query: query), note_api.get_content_namespace_notes(backend_url, query, namespace.namespace_id))
+	  }
+	}
+      }
+    }
+
     msg.LocalStorageReturnedSelectedNamespace(Ok(namespace)) -> #(
       Model(..model, selected_namespace: Some(namespace)),
       // NOTE: this loads on initial page load
@@ -150,7 +165,6 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   }
 }
 
-// use lowercase msg: https://github.com/lustre-labs/lustre/blob/main/examples/01-basics/03-view-functions/src/app.gleam
 fn view_namespace_card(nmspc: Namespace) -> Element(Msg) {
   let n = case nmspc.name {
     "" -> namespace.Namespace(..nmspc, name: "default")
@@ -210,6 +224,8 @@ fn view(model: Model) -> Element(Msg) {
           html.input([
             attribute.placeholder("Search notes..."),
             attribute.class("search-input"),
+	    attribute.value(model.note_search_query),
+	    event.on_input(msg.UserUpdatedNoteSearchQuery),
           ]),
 
           html.button([attribute.class("new-note-button")], [
@@ -235,7 +251,6 @@ pub fn main() {
   let assert Ok(_) = lustre.start(app, "#app", Nil)
   Nil
 }
+
 // TODO: namespace creation
-// TODO: note search with queries
-// TODO: namespace selection
-// TODO: filter notes by namespace
+// TODO: note search with queries (for start fulltext search)
