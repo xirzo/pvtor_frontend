@@ -7,9 +7,10 @@ pub type Msg {
   UserClickedSidebarButton
   UserClickedNoteCard(Note)
   UserClickedNamespaceCard(Namespace)
+  UserUpdatedNoteSearchQuery(String)
+  UserClickedNewNoteButton
   ApiReturnedNotes(Result(List(Note), rsvp.Error))
   ApiReturnedNamespaces(Result(List(Namespace), rsvp.Error))
   LocalStorageReturnedSelectedNote(Result(Note, varasto.ReadError))
   LocalStorageReturnedSelectedNamespace(Result(Namespace, varasto.ReadError))
-  UserUpdatedNoteSearchQuery(String)
 }

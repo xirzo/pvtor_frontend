@@ -14,6 +14,7 @@ import note/note_api
 import note/note_view
 import plinth/javascript/storage
 import varasto
+import ffi
 
 // TODO: get from env
 const backend_url = "http://localhost:5000/api/"
@@ -26,6 +27,7 @@ type Model {
     notes: List(Note),
     namespaces: List(Namespace),
     is_mobile_sidebar_toggled: Bool,
+    is_new_note_dialog_toggled: Bool,
   )
 }
 
@@ -56,7 +58,7 @@ fn get_selected_namespace() -> Effect(Msg) {
 fn init(_args) -> #(Model, Effect(Msg)) {
   let effects = effect.batch([get_selected_note(), get_selected_namespace(), namespace_api.get_namespaces(backend_url)])
 
-  #(Model(note_search_query: "", selected_note: None, selected_namespace: None, notes: [], namespaces: [], is_mobile_sidebar_toggled: False),
+  #(Model(note_search_query: "", selected_note: None, selected_namespace: None, notes: [], namespaces: [], is_mobile_sidebar_toggled: False, is_new_note_dialog_toggled: False),
     effects,
   )
 }
@@ -72,6 +74,14 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       ),
       effect.none(),
     )
+
+    msg.UserClickedNewNoteButton -> {
+      let effect = {
+        use _dispatch, _root <- effect.after_paint
+        ffi.show_dialog(".new-note-dialog")
+      }
+      #(Model(..model, is_new_note_dialog_toggled: !model.is_new_note_dialog_toggled), effect)
+    }
 
     msg.UserClickedNoteCard(note) -> {
       let s = varasto.new(local, note.note_reader(), note.note_writer())
@@ -118,7 +128,8 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       #(model, effect.none())
     }
 
-    msg.UserUpdatedNoteSearchQuery(query) -> {      
+    msg.UserUpdatedNoteSearchQuery(query) -> {
+      // TODO: возможно здесь ошибки (почитать про полнотекстовый поиск)
       case model.selected_namespace {
 	None -> {
 	  #(Model(..model, note_search_query: query), effect.none())
@@ -188,6 +199,12 @@ fn view_content(current_note: Option(Note)) -> Element(Msg) {
   }
 }
 
+fn view_new_note_dialog(is_toggled: Bool) -> Element(Msg) {
+  html.dialog([attribute.class("new-note-dialog")], [
+    html.p([], [html.text("New note dialog")])
+  ])
+}
+
 fn view(model: Model) -> Element(Msg) {
   let sidebar_class = case model.is_mobile_sidebar_toggled {
     True -> "sidebar-open"
@@ -202,6 +219,8 @@ fn view(model: Model) -> Element(Msg) {
       ],
       [html.text("☰")],
     ),
+
+    view_new_note_dialog(model.is_new_note_dialog_toggled),
 
     html.div([attribute.class(sidebar_class)], [
       html.div([attribute.class("sidebar-header")], [
@@ -228,9 +247,14 @@ fn view(model: Model) -> Element(Msg) {
 	    event.on_input(msg.UserUpdatedNoteSearchQuery),
           ]),
 
-          html.button([attribute.class("new-note-button")], [
-            html.text("New note"),
-          ]),
+	  html.button(
+	    [
+	      attribute.class("new-note-button"),
+	      event.on_click(msg.UserClickedNewNoteButton)
+	    ],
+	    [
+	      html.text("New note"),
+	    ]),
         ]),
       ]),
 
