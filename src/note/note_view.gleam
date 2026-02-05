@@ -29,7 +29,7 @@ pub fn view_card(note: Note) -> Element(Msg) {
 
   let update_time =
     datetime.literal(note.update_date)
-    |> datetime.format(tempo.Custom("dddd D, MMMM h:m, YYYY"))
+    |> datetime.format(tempo.Custom("dddd D, MMMM H:mm, YYYY"))
 
   let namespace_id = case note.namespace_id {
     None -> "Default namespace"
