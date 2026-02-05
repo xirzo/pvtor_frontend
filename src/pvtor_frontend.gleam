@@ -53,11 +53,9 @@ fn get_selected_namespace() -> Effect(Msg) {
 }
 
 fn init(_args) -> #(Model, Effect(Msg)) {
-  let effects =
-    effect.batch([note_api.get_notes(backend_url), get_selected_note(), namespace_api.get_namespaces(backend_url), get_selected_namespace()])
+  let effects = effect.batch([get_selected_note(), get_selected_namespace(), namespace_api.get_namespaces(backend_url)])
 
-  #(
-    Model(selected_note: None, selected_namespace: None, notes: [], namespaces: [], is_mobile_sidebar_toggled: False),
+  #(Model(selected_note: None, selected_namespace: None, notes: [], namespaces: [], is_mobile_sidebar_toggled: False),
     effects,
   )
 }
@@ -96,18 +94,22 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
 	case model.selected_namespace {
 	  None -> effect.none()
 	  Some(namespace) ->
-	    effect.from(fn(_) {
-	    // TODO: check for errors
-	      let _ = varasto.set(s, "selected_namespace", namespace)
-	      Nil
-	    })
+	    effect.batch([
+	      note_api.get_namespace_notes(backend_url, namespace.namespace_id),
+
+	      effect.from(fn(_) {
+	      // TODO: check for errors
+		let _ = varasto.set(s, "selected_namespace", namespace)
+		Nil
+	      })
+	    ])
 	},
       )
     }
 
     msg.LocalStorageReturnedSelectedNote(Ok(note)) -> #(
       Model(..model, selected_note: Some(note)),
-      effect.none(),
+      effect.none()
     )
 
     msg.LocalStorageReturnedSelectedNote(Error(err)) -> {
@@ -117,7 +119,8 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
 
     msg.LocalStorageReturnedSelectedNamespace(Ok(namespace)) -> #(
       Model(..model, selected_namespace: Some(namespace)),
-      effect.none(),
+      // NOTE: this loads on initial page load
+      note_api.get_namespace_notes(backend_url, namespace.namespace_id)
     )
 
     msg.LocalStorageReturnedSelectedNamespace(Error(err)) -> {
@@ -126,7 +129,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     }
 
     msg.ApiReturnedNotes(Ok(notes)) -> #(
-      Model(..model, notes: list.append(model.notes, notes)),
+      Model(..model, notes:),
       effect.none(),
     )
 
