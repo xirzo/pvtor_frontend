@@ -151,9 +151,14 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
 }
 
 // use lowercase msg: https://github.com/lustre-labs/lustre/blob/main/examples/01-basics/03-view-functions/src/app.gleam
-fn view_namespace_card(namespace: Namespace) -> Element(Msg) {
+fn view_namespace_card(nmspc: Namespace) -> Element(Msg) {
+  let n = case nmspc.name {
+    "" -> namespace.Namespace(..nmspc, name: "default")
+    _ -> nmspc
+  }
+
   html.div([attribute.class("namespace-card")], [
-    html.button([event.on_click(msg.UserClickedNamespaceCard(namespace)), attribute.class("namespace-card-button")], [html.text(namespace.name)]),
+    html.button([event.on_click(msg.UserClickedNamespaceCard(nmspc)), attribute.class("namespace-card-button")], [html.text(n.name)]),
   ])
 }
 
