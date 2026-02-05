@@ -6,6 +6,7 @@ import varasto
 pub type Msg {
   UserClickedSidebarButton
   UserClickedNoteCard(Note)
+  UserClickedNamespaceCard(Namespace)
   ApiReturnedNotes(Result(List(Note), rsvp.Error))
   ApiReturnedNamespaces(Result(List(Namespace), rsvp.Error))
   LocalStorageReturnedSelectedNote(Result(Note, varasto.ReadError))

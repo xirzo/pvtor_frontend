@@ -83,6 +83,11 @@ button:focus {
     padding: 1rem;
 }
 
+.namespace-card-button {
+    background-color: #10b981;
+    padding: 0.25rem;
+}
+
 .main-content {
     display: flex;
     flex-direction: column;
@@ -199,3 +204,4 @@ button:focus {
 .note-content-edit-button {
     background-color: #eab308;
 }
+

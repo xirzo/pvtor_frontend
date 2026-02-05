@@ -21,6 +21,7 @@ const backend_url = "http://localhost:5000/api/"
 type Model {
   Model(
     selected_note: Option(Note),
+    selected_namespace: Option(Namespace),
     notes: List(Note),
     namespaces: List(Namespace),
     is_mobile_sidebar_toggled: Bool,
@@ -44,14 +45,13 @@ fn init(_args) -> #(Model, Effect(Msg)) {
     effect.batch([note_api.get_notes(backend_url), get_selected_note(), namespace_api.get_namespaces(backend_url)])
 
   #(
-    Model(selected_note: None, notes: [], namespaces: [], is_mobile_sidebar_toggled: False),
+    Model(selected_note: None, selected_namespace: None, notes: [], namespaces: [], is_mobile_sidebar_toggled: False),
     effects,
   )
 }
 
 fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   let assert Ok(local) = storage.local()
-  let s = varasto.new(local, note.note_reader(), note.note_writer())
 
   case msg {
     msg.UserClickedSidebarButton -> #(
@@ -62,18 +62,36 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       effect.none(),
     )
 
-    msg.UserClickedNoteCard(note) -> #(
-      Model(..model, selected_note: Some(note)),
-      case model.selected_note {
-        None -> effect.none()
-        Some(note) ->
-          effect.from(fn(_) {
-            // TODO: check for errors
-            let _ = varasto.set(s, "selected_note", note)
-            Nil
-          })
-      },
-    )
+    msg.UserClickedNoteCard(note) -> {
+      let s = varasto.new(local, note.note_reader(), note.note_writer())
+      #(Model(..model, selected_note: Some(note)),
+	case model.selected_note {
+	  None -> effect.none()
+	  Some(note) ->
+	    effect.from(fn(_) {
+	    // TODO: check for errors
+	      let _ = varasto.set(s, "selected_note", note)
+	      Nil
+	    })
+	},
+      )
+    }
+
+    msg.UserClickedNamespaceCard(namespace) -> {
+      let s = varasto.new(local, namespace.decode_namespace(), namespace.encode_namespace())
+
+      #(Model(..model, selected_namespace: Some(namespace)),
+	case model.selected_namespace {
+	  None -> effect.none()
+	  Some(namespace) ->
+	    effect.from(fn(_) {
+	    // TODO: check for errors
+	      let _ = varasto.set(s, "selected_namespace", namespace)
+	      Nil
+	    })
+	},
+      )
+    }
 
     msg.LocalStorageReturnedSelectedNote(Ok(note)) -> #(
       Model(..model, selected_note: Some(note)),
@@ -107,9 +125,10 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   }
 }
 
+// use lowercase msg: https://github.com/lustre-labs/lustre/blob/main/examples/01-basics/03-view-functions/src/app.gleam
 fn view_namespace_card(namespace: Namespace) -> Element(Msg) {
   html.div([attribute.class("namespace-card")], [
-    html.p([], [html.text(namespace.name)]),
+    html.button([event.on_click(msg.UserClickedNamespaceCard(namespace)), attribute.class("namespace-card-button")], [html.text(namespace.name)]),
   ])
 }
 
@@ -152,7 +171,7 @@ fn view(model: Model) -> Element(Msg) {
         ]),
       ]),
 
-      html.div([], list.map(model.namespaces, view_namespace_card)),
+      html.div([], list.map(model.namespaces, view_namespace_card(_)))
     ]),
 
     html.div([attribute.class("main-content")], [
