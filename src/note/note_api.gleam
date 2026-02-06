@@ -72,13 +72,11 @@ pub fn update_note(
   note_id: Int,
   name: Option(String),
   content: String,
-  namespace_id: Option(Int),
 ) -> Effect(Msg) {
   let body =
     json.object([
       #("name", json.nullable(name, of: json.string)),
       #("content", json.string(content)),
-      #("namespaceId", json.nullable(namespace_id, of: json.int)),
     ])
 
   let decoder = note.decode_note()

@@ -208,13 +208,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     msg.UserClickedEditNoteButton(note, name, content) -> {
       #(
         Model(..model, new_note_content: "", new_note_name: ""),
-        note_api.update_note(
-          backend_url,
-          note.note_id,
-          Some(name),
-          content,
-          note.namespace_id,
-        ),
+        note_api.update_note(backend_url, note.note_id, Some(name), content),
       )
     }
 
