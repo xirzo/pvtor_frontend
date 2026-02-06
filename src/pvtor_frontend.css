@@ -7,22 +7,22 @@ body {
 }
 
 button {
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  text-decoration: none;
-  display: inline-block;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
 }
 
 /* TODO: make separate button styles */
 button:hover {
-  background-color: #ad8918;
+    background-color: #ad8918;
 }
 
 button:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5);
 }
 
 .main {
@@ -59,9 +59,9 @@ button:focus {
 
 @media (min-width: 768px) {
     .sidebar {
-	display: block;
-	width: 20%;
-	flex-shrink: 0; 
+        display: block;
+        width: 20%;
+        flex-shrink: 0;
     }
 
     .sidebar-header {
@@ -70,14 +70,14 @@ button:focus {
 }
 
 .namespaces-section {
-    background-color: #10b981; 
+    background-color: #10b981;
     display: grid;
     grid-template-columns: auto 7rem;
     align-items: center;
 }
 
 .namespace-card {
-    background-color: #eab308; 
+    background-color: #eab308;
     display: flex;
     align-items: center;
     padding: 1rem;
@@ -95,8 +95,8 @@ button:focus {
 
 @media (min-width: 768px) {
     .main-content {
-	flex: 1;
-	min-width: 0;
+        flex: 1;
+        min-width: 0;
     }
 }
 
@@ -159,11 +159,16 @@ button:focus {
 }
 
 dialog::backdrop {
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
 }
 
 .new-note-dialog {
+    background-color: #10b981;
+    margin: auto;
+}
+
+.note-edit-dialog {
     background-color: #10b981;
     margin: auto;
 }
@@ -192,7 +197,7 @@ dialog::backdrop {
 
 @media (min-width: 1024px) {
     .content-notes {
-	flex-basis: 25%;
+        flex-basis: 25%;
     }
 }
 
