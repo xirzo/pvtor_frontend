@@ -255,7 +255,17 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       echo err
       #(model, effect.none())
     }
-    msg.ApiReturnedUpdatedNote(_) -> todo
+
+    // TODO: replace note, not refetch all of them
+    msg.ApiReturnedUpdatedNote(_) -> {
+      let effect = case model.selected_namespace {
+        None -> effect.none()
+        Some(namespace) ->
+          note_api.get_namespace_notes(backend_url, namespace.namespace_id)
+      }
+
+      #(model, effect)
+    }
   }
 }
 
@@ -298,11 +308,6 @@ fn view_edit_note_dialog(model: Model) -> Element(Msg) {
       ])
     }
     Some(note) -> {
-      let name = case note.name {
-        None -> ""
-        Some(n) -> n
-      }
-
       html.dialog([attribute.class("note-edit-dialog")], [
         html.div([attribute.class("new-note-dialog-content")], [
           html.p([], [html.text("New note dialog")]),
