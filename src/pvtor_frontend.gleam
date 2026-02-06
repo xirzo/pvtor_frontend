@@ -29,6 +29,8 @@ type Model {
     is_mobile_sidebar_toggled: Bool,
     new_note_content: String,
     new_note_name: String,
+    edit_note_content: String,
+    edit_note_name: String,
   )
 }
 
@@ -80,6 +82,8 @@ fn init(_args) -> #(Model, Effect(Msg)) {
       is_mobile_sidebar_toggled: False,
       new_note_content: "",
       new_note_name: "",
+      edit_note_content: "",
+      edit_note_name: "",
     ),
     effects,
   )
@@ -162,6 +166,14 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       #(Model(..model, new_note_content: content), effect.none())
     }
 
+    msg.UserUpdatedEditNoteName(name) -> {
+      #(Model(..model, edit_note_name: name), effect.none())
+    }
+
+    msg.UserUpdatedEditNoteContent(content) -> {
+      #(Model(..model, edit_note_content: content), effect.none())
+    }
+
     msg.UserUpdatedNoteSearchQuery(query) -> {
       // TODO: возможно здесь ошибки (почитать про полнотекстовый поиск)
       case model.selected_namespace {
@@ -188,11 +200,22 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     }
 
     msg.UserClickedEditButton -> {
+      let #(edit_name, edit_content) = case model.selected_note {
+        None -> #("", "")
+        Some(note) -> #(note.name |> option.unwrap(""), note.content)
+      }
       let effect = {
         use _dispatch, _root <- effect.after_paint
         ffi.show_dialog(".note-edit-dialog")
       }
-      #(model, effect)
+      #(
+        Model(
+          ..model,
+          edit_note_name: edit_name,
+          edit_note_content: edit_content,
+        ),
+        effect,
+      )
     }
 
     msg.UserClickedCreateNoteButton(name, content, namespace_id) -> {
@@ -207,7 +230,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
 
     msg.UserClickedEditNoteButton(note, name, content) -> {
       #(
-        Model(..model, new_note_content: "", new_note_name: ""),
+        Model(..model, edit_note_content: "", edit_note_name: ""),
         note_api.update_note(backend_url, note.note_id, Some(name), content),
       )
     }
@@ -304,26 +327,26 @@ fn view_edit_note_dialog(model: Model) -> Element(Msg) {
     Some(note) -> {
       html.dialog([attribute.class("note-edit-dialog")], [
         html.div([attribute.class("new-note-dialog-content")], [
-          html.p([], [html.text("New note dialog")]),
+          html.p([], [html.text("Edit note")]),
 
           html.input([
             attribute.placeholder("Note name"),
-            attribute.value(model.new_note_name),
-            event.on_input(msg.UserUpdatedNewNoteName),
+            attribute.value(model.edit_note_name),
+            event.on_input(msg.UserUpdatedEditNoteName),
           ]),
 
           html.input([
             attribute.placeholder("Content"),
-            attribute.value(model.new_note_content),
-            event.on_input(msg.UserUpdatedNewNoteContent),
+            attribute.value(model.edit_note_content),
+            event.on_input(msg.UserUpdatedEditNoteContent),
           ]),
 
           html.button(
             [
               event.on_click(msg.UserClickedEditNoteButton(
                 note,
-                model.new_note_name,
-                model.new_note_content,
+                model.edit_note_name,
+                model.edit_note_content,
               )),
             ],
             [html.text("Edit note")],
@@ -443,4 +466,6 @@ pub fn main() {
   Nil
 }
 // TODO: namespace creation
-// TODO: note search with queries (for start fulltext search)
+// TODO: display name instead of content for note 
+// (if name is present), or add card with name and content
+// TODO: note deletion

@@ -11,6 +11,8 @@ pub type Msg {
   UserUpdatedNoteSearchQuery(String)
   UserUpdatedNewNoteName(String)
   UserUpdatedNewNoteContent(String)
+  UserUpdatedEditNoteName(String)
+  UserUpdatedEditNoteContent(String)
   UserClickedEditNoteButton(Note, String, String)
   UserClickedEditButton
   UserClickedNewNoteButton
