@@ -46,9 +46,11 @@ pub fn view_card(note: Note) -> Element(Msg) {
   html.div([attribute.class("note-content")], [
     html.b([], [html.text("Update date")]),
     html.p([], [html.text(update_time)]),
-    html.b([], [html.text("Note content")]),
-    html.button([attribute.class("note-content-edit-button")], [
-      html.text("Edit"),
+    html.div([attribute.class("note-content-title-button-holder")], [
+	html.b([], [html.text("Note content")]),
+	html.button([attribute.class("note-content-edit-button")], [
+	html.text("Edit"),
+	]),
     ]),
     html.p([], [html.text(note.content)]),
     html.b([], [html.text("Metadata")]),

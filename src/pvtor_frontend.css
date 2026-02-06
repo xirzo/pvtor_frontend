@@ -220,3 +220,7 @@ dialog::backdrop {
     background-color: #eab308;
 }
 
+.note-content-title-button-holder {
+    display: flex;
+    justify-content: space-between;
+}
