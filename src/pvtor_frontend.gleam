@@ -233,6 +233,8 @@ fn view_new_note_dialog(model: Model) -> Element(Msg) {
   }
 
   html.dialog([attribute.class("new-note-dialog")], [
+    html.div([attribute.class("new-note-dialog-content")], [
+
     html.p([], [html.text("New note dialog")]),
 
     html.input([
@@ -248,7 +250,7 @@ fn view_new_note_dialog(model: Model) -> Element(Msg) {
     ]),
 
     html.button([event.on_click(msg.UserClickedCreateNoteButton(model.new_note_name, model.new_note_content, namespace_id))], [html.text("Create note")])
-  ])
+  ])])
 }
 
 fn view(model: Model) -> Element(Msg) {

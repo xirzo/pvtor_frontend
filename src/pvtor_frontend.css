@@ -166,6 +166,9 @@ dialog::backdrop {
 .new-note-dialog {
     background-color: #10b981;
     margin: auto;
+}
+
+.new-note-dialog-content {
     display: flex;
     flex-direction: column;
 }
