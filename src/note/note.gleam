@@ -37,12 +37,7 @@ pub fn decode_note() {
   ))
 }
 
-pub fn note_reader() {
-  decode_note()
-}
-
-pub fn note_writer() {
-  fn(n: Note) {
+pub fn note_to_json(n: Note) {
     json.object([
       #("noteId", json.int(n.note_id)),
       #("content", json.string(n.content)),
@@ -52,5 +47,14 @@ pub fn note_writer() {
       #("isHidden", json.bool(n.is_hidden)),
       #("name", json.nullable(n.name, of: json.string)),
     ])
+}
+
+pub fn note_reader() {
+  decode_note()
+}
+
+pub fn note_writer() {
+  fn(n: Note) {
+    note_to_json(n)
   }
 }

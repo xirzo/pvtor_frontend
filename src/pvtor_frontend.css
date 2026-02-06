@@ -158,6 +158,18 @@ button:focus {
     background-color: #10b981;
 }
 
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.new-note-dialog {
+    background-color: #10b981;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+}
+
 .content-area {
     background-color: #10b981;
     display: flex;

@@ -28,6 +28,8 @@ type Model {
     namespaces: List(Namespace),
     is_mobile_sidebar_toggled: Bool,
     is_new_note_dialog_toggled: Bool,
+    new_note_content: String,
+    new_note_name: String,
   )
 }
 
@@ -58,7 +60,7 @@ fn get_selected_namespace() -> Effect(Msg) {
 fn init(_args) -> #(Model, Effect(Msg)) {
   let effects = effect.batch([get_selected_note(), get_selected_namespace(), namespace_api.get_namespaces(backend_url)])
 
-  #(Model(note_search_query: "", selected_note: None, selected_namespace: None, notes: [], namespaces: [], is_mobile_sidebar_toggled: False, is_new_note_dialog_toggled: False),
+  #(Model(note_search_query: "", selected_note: None, selected_namespace: None, notes: [], namespaces: [], is_mobile_sidebar_toggled: False, is_new_note_dialog_toggled: False, new_note_content: "", new_note_name: ""),
     effects,
   )
 }
@@ -128,6 +130,14 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
       #(model, effect.none())
     }
 
+    msg.UserUpdatedNewNoteName(name) -> {
+      #(Model(..model, new_note_name: name), effect.none())
+    }
+
+    msg.UserUpdatedNewNoteContent(content) -> {
+      #(Model(..model, new_note_content: content), effect.none())
+    }
+
     msg.UserUpdatedNoteSearchQuery(query) -> {
       // TODO: возможно здесь ошибки (почитать про полнотекстовый поиск)
       case model.selected_namespace {
@@ -140,6 +150,13 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
 	    _ -> #(Model(..model, note_search_query: query), note_api.get_content_namespace_notes(backend_url, query, namespace.namespace_id))
 	  }
 	}
+      }
+    }
+
+    msg.UserClickedCreateNoteButton(name, content, namespace_id) -> {
+      case namespace_id {
+	None -> #(model, effect.none())
+	Some(n_id) -> #(model, note_api.create_note(backend_url, Some(name), content, Some(n_id)))
       }
     }
 
@@ -160,6 +177,16 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
     )
 
     msg.ApiReturnedNotes(Error(err)) -> {
+      echo err
+      #(model, effect.none())
+    }
+
+    msg.ApiReturnedCreatedNote(Ok(note)) -> #(
+      Model(..model, notes: [note, ..model.notes]),
+      effect.none(),
+    )
+
+    msg.ApiReturnedCreatedNote(Error(err)) -> {
       echo err
       #(model, effect.none())
     }
@@ -199,9 +226,28 @@ fn view_content(current_note: Option(Note)) -> Element(Msg) {
   }
 }
 
-fn view_new_note_dialog(is_toggled: Bool) -> Element(Msg) {
+fn view_new_note_dialog(model: Model) -> Element(Msg) {
+  let namespace_id = case model.selected_namespace {
+    None -> None
+    Some(n) -> Some(n.namespace_id)
+  }
+
   html.dialog([attribute.class("new-note-dialog")], [
-    html.p([], [html.text("New note dialog")])
+    html.p([], [html.text("New note dialog")]),
+
+    html.input([
+      attribute.placeholder("Note name"),
+      attribute.value(model.new_note_name),
+      event.on_input(msg.UserUpdatedNewNoteName),
+    ]),
+
+    html.input([
+      attribute.placeholder("Content"),
+      attribute.value(model.new_note_content),
+      event.on_input(msg.UserUpdatedNewNoteContent),
+    ]),
+
+    html.button([event.on_click(msg.UserClickedCreateNoteButton(model.new_note_name, model.new_note_content, namespace_id))], [html.text("Create note")])
   ])
 }
 
@@ -220,7 +266,7 @@ fn view(model: Model) -> Element(Msg) {
       [html.text("☰")],
     ),
 
-    view_new_note_dialog(model.is_new_note_dialog_toggled),
+    view_new_note_dialog(model),
 
     html.div([attribute.class(sidebar_class)], [
       html.div([attribute.class("sidebar-header")], [
@@ -241,8 +287,8 @@ fn view(model: Model) -> Element(Msg) {
       html.div([attribute.class("top-bar")], [
         html.div([attribute.class("search-section")], [
           html.input([
-            attribute.placeholder("Search notes..."),
             attribute.class("search-input"),
+            attribute.placeholder("Search notes..."),
 	    attribute.value(model.note_search_query),
 	    event.on_input(msg.UserUpdatedNoteSearchQuery),
           ]),
