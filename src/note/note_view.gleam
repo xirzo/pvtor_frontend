@@ -22,14 +22,21 @@ pub fn view_note_card(note: Note) -> Element(Msg) {
   )
 }
 
-pub fn view_card(note: Note) -> Element(Msg) {
-  let creation_time =
-    datetime.literal(note.creation_date)
-    |> datetime.format(tempo.Custom("dddd D, MMMM h:m, YYYY"))
+fn format_date(date_string: String) -> String {
+  case datetime.parse(date_string, tempo.ISO8601Micro) {
+    Ok(dt) -> {
+      datetime.format(dt, tempo.Custom("dddd, D MMMM YYYY, HH:mm"))
+    }
+    Error(err) -> {
+      echo err
+      "Error parsing date string"
+    }
+  }
+}
 
-  let update_time =
-    datetime.literal(note.update_date)
-    |> datetime.format(tempo.Custom("dddd D, MMMM H:mm, YYYY"))
+pub fn view_card(note: Note) -> Element(Msg) {
+  let creation_time = format_date(note.creation_date)
+  let update_time = format_date(note.update_date)
 
   let namespace_id = case note.namespace_id {
     None -> "Default namespace"
@@ -39,17 +46,12 @@ pub fn view_card(note: Note) -> Element(Msg) {
   html.div([attribute.class("note-content")], [
     html.b([], [html.text("Update date")]),
     html.p([], [html.text(update_time)]),
-
     html.b([], [html.text("Note content")]),
-
     html.button([attribute.class("note-content-edit-button")], [
       html.text("Edit"),
     ]),
-
     html.p([], [html.text(note.content)]),
-
     html.b([], [html.text("Metadata")]),
-
     html.p([], [html.text("Namespace Id: " <> namespace_id)]),
     html.p([], [html.text("Is hidden: " <> bool.to_string(note.is_hidden))]),
     html.p([], [html.text("Creation date: " <> creation_time)]),
