@@ -8,8 +8,6 @@ pub fn main() {
   Nil
 }
 // TODO: namespace creation
-// TODO: display name instead of content for note 
-// (if name is present), or add card with name and content
 // TODO: note deletion
 // TODO: option for showing hidden notes
 // TODO: sort notes by creation/update date

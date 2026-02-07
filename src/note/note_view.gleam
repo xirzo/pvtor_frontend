@@ -12,15 +12,28 @@ import note/note.{type Note}
 import pvtor_frontend/msg.{type Msg}
 
 pub fn view_note_card(note: Note) -> Element(Msg) {
-  html.button(
-    [
-      attribute.class("note-card"),
-      event.on_click(msg.UserClickedNoteCard(note)),
-    ],
-    [
-      html.p([], [html.text(note.content)]),
-    ],
-  )
+  case note.name {
+    None ->
+      html.button(
+        [
+          attribute.class("note-card"),
+          event.on_click(msg.UserClickedNoteCard(note)),
+        ],
+        [
+          html.p([], [html.text(note.content)]),
+        ],
+      )
+    Some(name) ->
+      html.button(
+        [
+          attribute.class("note-card"),
+          event.on_click(msg.UserClickedNoteCard(note)),
+        ],
+        [
+          html.p([], [html.text(name)]),
+        ],
+      )
+  }
 }
 
 fn month_name(month: Int) -> String {
@@ -129,7 +142,21 @@ pub fn view_card(note: Note) -> Element(Msg) {
     Some(namespace) -> int.to_string(namespace)
   }
 
+  let name_component = case note.name {
+    None ->
+      element.fragment([
+        html.b([], [html.text("Name")]),
+        html.p([], [html.text("Untitled note")]),
+      ])
+    Some(name) ->
+      element.fragment([
+        html.b([], [html.text("Name")]),
+        html.p([], [html.text(name)]),
+      ])
+  }
+
   html.div([attribute.class("note-content")], [
+    name_component,
     html.b([], [html.text("Update date")]),
     html.p([], [html.text(update_time)]),
     html.div([attribute.class("note-content-title-button-holder")], [
