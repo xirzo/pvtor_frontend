@@ -1,12 +1,10 @@
 import gleam/dynamic/decode
-import gleam/http
-import gleam/http/request
 import gleam/int
 import gleam/json
 import gleam/option.{type Option}
 import lustre/effect.{type Effect}
-import msg.{type Msg, ApiReturnedNotes}
 import note/note
+import pvtor_frontend/msg.{type Msg, ApiReturnedNotes}
 import rsvp
 
 pub fn get_notes(backend_url: String) -> Effect(Msg) {

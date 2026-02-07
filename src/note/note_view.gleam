@@ -8,8 +8,8 @@ import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
-import msg.{type Msg}
 import note/note.{type Note}
+import pvtor_frontend/msg.{type Msg}
 
 pub fn view_note_card(note: Note) -> Element(Msg) {
   html.button(
