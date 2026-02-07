@@ -173,10 +173,12 @@ pub fn view(model: Model) -> Element(Msg) {
       ]),
 
       html.div([attribute.class("content-area")], [
-        html.div(
-          [attribute.class("content-notes")],
-          list.map(model.notes, note_view.view_note_card),
-        ),
+        html.div([attribute.class("content-notes")], [
+          html.select([event.on_change(msg.UserChangedNoteSortOrder)], [
+            html.option([attribute.value("update_date")], "By update date"),
+          ]),
+          ..list.map(model.notes, note_view.view_note_card)
+        ]),
 
         view_content(model.selected_note),
       ]),

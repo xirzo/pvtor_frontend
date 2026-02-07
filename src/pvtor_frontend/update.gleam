@@ -264,5 +264,8 @@ pub fn update(model: Model, message: Msg) -> #(Model, Effect(Msg)) {
 
       #(model, effect)
     }
+
+    // TODO: implement order switching
+    msg.UserChangedNoteSortOrder(_) -> todo
   }
 }

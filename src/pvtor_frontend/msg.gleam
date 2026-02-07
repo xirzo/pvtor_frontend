@@ -23,4 +23,5 @@ pub type Msg {
   ApiReturnedNamespaces(Result(List(Namespace), rsvp.Error))
   LocalStorageReturnedSelectedNote(Result(Note, varasto.ReadError))
   LocalStorageReturnedSelectedNamespace(Result(Namespace, varasto.ReadError))
+  UserChangedNoteSortOrder(String)
 }

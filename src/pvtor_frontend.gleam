@@ -7,8 +7,9 @@ pub fn main() {
   let assert Ok(_) = lustre.start(app, "#app", Nil)
   Nil
 }
-// TODO: namespace creation
+// TODO: sort notes by creation/update date (by default)
 // TODO: note deletion
+// TODO: mark note as hidden button
 // TODO: option for showing hidden notes
-// TODO: sort notes by creation/update date
-// TODO: add different sorting options
+// TODO: add different sorting options (by creation/update date, name, ascending/descending)
+// TODO: namespace creation
