@@ -1,3 +1,4 @@
+import api/client
 import gleam/dynamic/decode
 import gleam/int
 import gleam/json
@@ -5,15 +6,14 @@ import gleam/option.{type Option}
 import lustre/effect.{type Effect}
 import note/note
 import pvtor_frontend/msg.{type Msg, ApiReturnedNotes}
-import rsvp
 
 pub fn get_notes(backend_url: String) -> Effect(Msg) {
   let decoder = note.decode_note()
   let url = backend_url <> "notes"
 
-  let handler = rsvp.expect_json(decode.list(decoder), ApiReturnedNotes)
+  let handler = client.expect_json(decode.list(decoder), ApiReturnedNotes)
 
-  rsvp.get(url, handler)
+  client.get(url, handler)
 }
 
 pub fn get_content_namespace_notes(
@@ -28,9 +28,9 @@ pub fn get_content_namespace_notes(
     <> content
     <> "&namespaceIds="
     <> int.to_string(namespace_id)
-  let handler = rsvp.expect_json(decode.list(decoder), ApiReturnedNotes)
+  let handler = client.expect_json(decode.list(decoder), ApiReturnedNotes)
 
-  rsvp.get(url, handler)
+  client.get(url, handler)
 }
 
 pub fn get_namespace_notes(
@@ -40,9 +40,9 @@ pub fn get_namespace_notes(
   let decoder = note.decode_note()
   let url = backend_url <> "notes?namespaceIds=" <> int.to_string(namespace_id)
 
-  let handler = rsvp.expect_json(decode.list(decoder), ApiReturnedNotes)
+  let handler = client.expect_json(decode.list(decoder), ApiReturnedNotes)
 
-  rsvp.get(url, handler)
+  client.get(url, handler)
 }
 
 pub fn create_note(
@@ -60,9 +60,9 @@ pub fn create_note(
 
   let decoder = note.decode_note()
   let url = backend_url <> "notes"
-  let handler = rsvp.expect_json(decoder, msg.ApiReturnedCreatedNote)
+  let handler = client.expect_json(decoder, msg.ApiReturnedCreatedNote)
 
-  rsvp.post(url, body, handler)
+  client.post(url, body, handler)
 }
 
 pub fn update_note(
@@ -79,17 +79,15 @@ pub fn update_note(
 
   let decoder = note.decode_note()
   let url = backend_url <> "notes/" <> int.to_string(note_id)
-  let handler = rsvp.expect_json(decoder, msg.ApiReturnedUpdatedNote)
+  let handler = client.expect_json(decoder, msg.ApiReturnedUpdatedNote)
 
-  rsvp.patch(url, body, handler)
+  client.patch(url, body, handler)
 }
 
 pub fn delete_note(backend_url: String, note_id: Int) -> Effect(Msg) {
-  let body = json.object([])
-
   let decoder = note.decode_note()
   let url = backend_url <> "notes/" <> int.to_string(note_id)
-  let handler = rsvp.expect_json(decoder, msg.ApiReturnedUpdatedNote)
+  let handler = client.expect_json(decoder, msg.ApiReturnedUpdatedNote)
 
-  rsvp.delete(url, body, handler)
+  client.delete(url, handler)
 }
