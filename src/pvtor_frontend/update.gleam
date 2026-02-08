@@ -1,3 +1,4 @@
+import auth/auth_api
 import ffi/ffi
 import gleam/io
 import gleam/list
@@ -47,28 +48,7 @@ pub fn get_selected_namespace() -> Effect(Msg) {
 }
 
 pub fn init(_args) -> #(model.Model, Effect(Msg)) {
-  let effects =
-    effect.batch([
-      get_selected_note(),
-      get_selected_namespace(),
-      namespace_api.get_namespaces(backend_url),
-    ])
-
-  #(
-    model.LoggedIn(model.LoggedInModel(
-      note_search_query: "",
-      selected_note: None,
-      selected_namespace: None,
-      notes: [],
-      namespaces: [],
-      is_mobile_sidebar_toggled: False,
-      new_note_content: "",
-      new_note_name: "",
-      edit_note_content: "",
-      edit_note_name: "",
-    )),
-    effects,
-  )
+  #(model.Public(model.PublicModel("")), auth_api.check_auth(backend_url))
 }
 
 fn update_logged_in_model(
@@ -372,14 +352,78 @@ fn update_logged_in_model(
         effect,
       )
     }
+
+    msg.ApiReturnedLogoutStatus(Ok(_)) -> #(
+      model.Public(model.PublicModel("")),
+      effect.none(),
+    )
+
+    msg.ApiReturnedLogoutStatus(Error(err)) -> {
+      io.println(string.inspect(err))
+      #(model.LoggedIn(logged_in_model), effect.none())
+    }
+
+    msg.ApiReturnedAuthCheck(Error(_)) -> #(
+      model.Public(model.PublicModel("")),
+      effect.none(),
+    )
+
+    msg.UserUpdatedMasterPasswordInput(_)
+    | msg.UserClickedLogInButton
+    | msg.ApiReturnedLoginStatus(_)
+    | msg.ApiReturnedAuthCheck(Ok(_)) -> #(
+      model.LoggedIn(logged_in_model),
+      effect.none(),
+    )
   }
 }
 
 fn update_public_model(
   model: model.PublicModel,
-  _message: Msg,
+  message: Msg,
 ) -> #(model.Model, Effect(Msg)) {
-  #(model.Public(model), effect.none())
+  case message {
+    msg.UserUpdatedMasterPasswordInput(master_password_input) -> {
+      #(model.Public(model.PublicModel(master_password_input:)), effect.none())
+    }
+    msg.UserClickedLogInButton -> {
+      let effect = auth_api.log_in(backend_url, model.master_password_input)
+
+      #(model.Public(model), effect)
+    }
+
+    msg.ApiReturnedLoginStatus(Ok(_)) | msg.ApiReturnedAuthCheck(Ok(_)) -> {
+      let logged_in_model =
+        model.LoggedInModel(
+          note_search_query: "",
+          selected_note: None,
+          selected_namespace: None,
+          notes: [],
+          namespaces: [],
+          is_mobile_sidebar_toggled: False,
+          new_note_content: "",
+          new_note_name: "",
+          edit_note_content: "",
+          edit_note_name: "",
+        )
+
+      let effects =
+        effect.batch([
+          get_selected_note(),
+          get_selected_namespace(),
+          namespace_api.get_namespaces(backend_url),
+        ])
+
+      #(model.LoggedIn(logged_in_model), effects)
+    }
+
+    msg.ApiReturnedLoginStatus(Error(err)) -> {
+      io.println(string.inspect(err))
+      #(model.Public(model), effect.none())
+    }
+
+    _ -> #(model.Public(model), effect.none())
+  }
 }
 
 pub fn update(model: model.Model, message: Msg) -> #(model.Model, Effect(Msg)) {

@@ -187,7 +187,18 @@ fn view_logged_in(model: model.LoggedInModel) -> Element(Msg) {
 }
 
 fn view_public(_model: model.PublicModel) -> Element(Msg) {
-  html.div([], [html.text("Please log in")])
+  html.div([attribute.class("main")], [
+    html.div([attribute.class("public-content")], [
+      html.text("Please log in"),
+      html.input([
+        attribute.placeholder("Master password"),
+        event.on_input(msg.UserUpdatedMasterPasswordInput),
+      ]),
+      html.button([event.on_click(msg.UserClickedLogInButton)], [
+        html.text("Log in"),
+      ]),
+    ]),
+  ])
 }
 
 pub fn view(model: model.Model) -> Element(Msg) {

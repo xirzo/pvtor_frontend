@@ -21,8 +21,13 @@ pub type Msg {
   ApiReturnedCreatedNote(Result(Note, rsvp.Error))
   ApiReturnedUpdatedNote(Result(Note, rsvp.Error))
   ApiReturnedNamespaces(Result(List(Namespace), rsvp.Error))
+  ApiReturnedLoginStatus(Result(Nil, rsvp.Error))
+  ApiReturnedLogoutStatus(Result(Nil, rsvp.Error))
+  ApiReturnedAuthCheck(Result(Nil, rsvp.Error))
   LocalStorageReturnedSelectedNote(Result(Note, varasto.ReadError))
   LocalStorageReturnedSelectedNamespace(Result(Namespace, varasto.ReadError))
   UserChangedNoteSortOrder(String)
   UserClickedDeleteButton
+  UserUpdatedMasterPasswordInput(String)
+  UserClickedLogInButton
 }
