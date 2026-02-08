@@ -267,5 +267,24 @@ pub fn update(model: Model, message: Msg) -> #(Model, Effect(Msg)) {
 
     // TODO: implement order switching
     msg.UserChangedNoteSortOrder(_) -> todo
+
+    msg.UserClickedDeleteButton -> {
+      let s = varasto.new(local, note.note_reader(), note.note_writer())
+
+      let effect =
+        effect.batch([
+          case model.selected_note {
+            None -> effect.none()
+            Some(note) -> note_api.delete_note(backend_url, note.note_id)
+          },
+          effect.from(fn(_) {
+            // TODO: check for errors
+            let _ = varasto.remove(s, "selected_note")
+            Nil
+          }),
+        ])
+
+      #(Model(..model, selected_note: None), effect)
+    }
   }
 }

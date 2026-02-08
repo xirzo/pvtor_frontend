@@ -225,7 +225,7 @@ dialog::backdrop {
     background-color: #eab308;
 }
 
-.note-content-title-button-holder {
+.note-content-buttons-holder {
     display: flex;
-    justify-content: space-between;
+    gap: 1rem;
 }

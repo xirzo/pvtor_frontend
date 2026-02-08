@@ -156,11 +156,7 @@ pub fn view_card(note: Note) -> Element(Msg) {
   }
 
   html.div([attribute.class("note-content")], [
-    name_component,
-    html.b([], [html.text("Update date")]),
-    html.p([], [html.text(update_time)]),
-    html.div([attribute.class("note-content-title-button-holder")], [
-      html.b([], [html.text("Note content")]),
+    html.div([attribute.class("note-content-buttons-holder")], [
       html.button(
         [
           event.on_click(msg.UserClickedEditButton),
@@ -170,7 +166,22 @@ pub fn view_card(note: Note) -> Element(Msg) {
           html.text("Edit"),
         ],
       ),
+
+      html.button(
+        [
+          event.on_click(msg.UserClickedDeleteButton),
+          attribute.class("note-content-edit-button"),
+        ],
+        [
+          html.text("Delete"),
+        ],
+      ),
     ]),
+
+    name_component,
+    html.b([], [html.text("Update date")]),
+    html.p([], [html.text(update_time)]),
+    html.b([], [html.text("Note content")]),
     html.p([], [html.text(note.content)]),
     html.b([], [html.text("Metadata")]),
     html.p([], [html.text("Namespace Id: " <> namespace_id)]),

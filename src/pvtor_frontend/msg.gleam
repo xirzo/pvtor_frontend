@@ -24,4 +24,5 @@ pub type Msg {
   LocalStorageReturnedSelectedNote(Result(Note, varasto.ReadError))
   LocalStorageReturnedSelectedNamespace(Result(Namespace, varasto.ReadError))
   UserChangedNoteSortOrder(String)
+  UserClickedDeleteButton
 }

@@ -83,3 +83,13 @@ pub fn update_note(
 
   rsvp.patch(url, body, handler)
 }
+
+pub fn delete_note(backend_url: String, note_id: Int) -> Effect(Msg) {
+  let body = json.object([])
+
+  let decoder = note.decode_note()
+  let url = backend_url <> "notes/" <> int.to_string(note_id)
+  let handler = rsvp.expect_json(decoder, msg.ApiReturnedUpdatedNote)
+
+  rsvp.delete(url, body, handler)
+}
