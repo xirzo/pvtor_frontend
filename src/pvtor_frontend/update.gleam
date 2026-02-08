@@ -9,7 +9,7 @@ import namespace/namespace_api
 import note/note
 import note/note_api
 import plinth/javascript/storage
-import pvtor_frontend/model.{type Model, Model}
+import pvtor_frontend/model
 import pvtor_frontend/msg.{type Msg}
 import varasto
 
@@ -46,7 +46,7 @@ pub fn get_selected_namespace() -> Effect(Msg) {
   })
 }
 
-pub fn init(_args) -> #(Model, Effect(Msg)) {
+pub fn init(_args) -> #(model.Model, Effect(Msg)) {
   let effects =
     effect.batch([
       get_selected_note(),
@@ -55,7 +55,7 @@ pub fn init(_args) -> #(Model, Effect(Msg)) {
     ])
 
   #(
-    Model(
+    model.LoggedIn(model.LoggedInModel(
       note_search_query: "",
       selected_note: None,
       selected_namespace: None,
@@ -66,42 +66,52 @@ pub fn init(_args) -> #(Model, Effect(Msg)) {
       new_note_name: "",
       edit_note_content: "",
       edit_note_name: "",
-    ),
+    )),
     effects,
   )
 }
 
-pub fn update(model: Model, message: Msg) -> #(Model, Effect(Msg)) {
+fn update_logged_in_model(
+  logged_in_model: model.LoggedInModel,
+  message: Msg,
+) -> #(model.Model, Effect(Msg)) {
   let assert Ok(local) = storage.local()
 
   case message {
-    msg.UserClickedSidebarButton -> #(
-      Model(
-        ..model,
-        is_mobile_sidebar_toggled: !model.is_mobile_sidebar_toggled,
-      ),
-      effect.none(),
-    )
+    msg.UserClickedSidebarButton -> {
+      let mod =
+        model.LoggedInModel(
+          ..logged_in_model,
+          is_mobile_sidebar_toggled: !logged_in_model.is_mobile_sidebar_toggled,
+        )
+
+      #(model.LoggedIn(mod), effect.none())
+    }
 
     msg.UserClickedNewNoteButton -> {
       let effect = {
         use _dispatch, _root <- effect.after_paint
         ffi.show_dialog(".new-note-dialog")
       }
-      #(model, effect)
+      #(model.LoggedIn(logged_in_model), effect)
     }
 
     msg.UserClickedNoteCard(note) -> {
       let s = varasto.new(local, note.note_reader(), note.note_writer())
-      #(Model(..model, selected_note: Some(note)), case model.selected_note {
-        None -> effect.none()
-        Some(note) ->
-          effect.from(fn(_) {
-            // TODO: check for errors
-            let _ = varasto.set(s, "selected_note", note)
-            Nil
-          })
-      })
+      #(
+        model.LoggedIn(
+          model.LoggedInModel(..logged_in_model, selected_note: Some(note)),
+        ),
+        case logged_in_model.selected_note {
+          None -> effect.none()
+          Some(note) ->
+            effect.from(fn(_) {
+              // TODO: check for errors
+              let _ = varasto.set(s, "selected_note", note)
+              Nil
+            })
+        },
+      )
     }
 
     msg.UserClickedNamespaceCard(nmspc) -> {
@@ -113,8 +123,13 @@ pub fn update(model: Model, message: Msg) -> #(Model, Effect(Msg)) {
         )
 
       #(
-        Model(..model, selected_namespace: Some(nmspc)),
-        case model.selected_namespace {
+        model.LoggedIn(
+          model.LoggedInModel(
+            ..logged_in_model,
+            selected_namespace: Some(nmspc),
+          ),
+        ),
+        case logged_in_model.selected_namespace {
           None -> effect.none()
           Some(nmspc) ->
             effect.batch([
@@ -131,44 +146,75 @@ pub fn update(model: Model, message: Msg) -> #(Model, Effect(Msg)) {
     }
 
     msg.LocalStorageReturnedSelectedNote(Ok(note)) -> #(
-      Model(..model, selected_note: Some(note)),
+      model.LoggedIn(
+        model.LoggedInModel(..logged_in_model, selected_note: Some(note)),
+      ),
       effect.none(),
     )
 
     msg.LocalStorageReturnedSelectedNote(Error(err)) -> {
       io.println(string.inspect(err))
-      #(model, effect.none())
+      #(model.LoggedIn(logged_in_model), effect.none())
     }
 
     msg.UserUpdatedNewNoteName(name) -> {
-      #(Model(..model, new_note_name: name), effect.none())
+      #(
+        model.LoggedIn(
+          model.LoggedInModel(..logged_in_model, new_note_name: name),
+        ),
+        effect.none(),
+      )
     }
 
     msg.UserUpdatedNewNoteContent(content) -> {
-      #(Model(..model, new_note_content: content), effect.none())
+      #(
+        model.LoggedIn(
+          model.LoggedInModel(..logged_in_model, new_note_content: content),
+        ),
+        effect.none(),
+      )
     }
 
     msg.UserUpdatedEditNoteName(name) -> {
-      #(Model(..model, edit_note_name: name), effect.none())
+      #(
+        model.LoggedIn(
+          model.LoggedInModel(..logged_in_model, edit_note_name: name),
+        ),
+        effect.none(),
+      )
     }
 
     msg.UserUpdatedEditNoteContent(content) -> {
-      #(Model(..model, edit_note_content: content), effect.none())
+      #(
+        model.LoggedIn(
+          model.LoggedInModel(..logged_in_model, edit_note_content: content),
+        ),
+        effect.none(),
+      )
     }
 
     msg.UserUpdatedNoteSearchQuery(query) -> {
-      case model.selected_namespace {
+      case logged_in_model.selected_namespace {
         None -> {
-          #(Model(..model, note_search_query: query), effect.none())
+          #(
+            model.LoggedIn(
+              model.LoggedInModel(..logged_in_model, note_search_query: query),
+            ),
+            effect.none(),
+          )
         }
         Some(namespace) -> {
           case query {
             "" -> #(
-              Model(..model, note_search_query: query),
+              model.LoggedIn(
+                model.LoggedInModel(..logged_in_model, note_search_query: query),
+              ),
               note_api.get_namespace_notes(backend_url, namespace.namespace_id),
             )
             _ -> #(
-              Model(..model, note_search_query: query),
+              model.LoggedIn(
+                model.LoggedInModel(..logged_in_model, note_search_query: query),
+              ),
               note_api.get_content_namespace_notes(
                 backend_url,
                 query,
@@ -181,7 +227,7 @@ pub fn update(model: Model, message: Msg) -> #(Model, Effect(Msg)) {
     }
 
     msg.UserClickedEditButton -> {
-      let #(edit_name, edit_content) = case model.selected_note {
+      let #(edit_name, edit_content) = case logged_in_model.selected_note {
         None -> #("", "")
         Some(note) -> #(note.name |> option.unwrap(""), note.content)
       }
@@ -190,10 +236,12 @@ pub fn update(model: Model, message: Msg) -> #(Model, Effect(Msg)) {
         ffi.show_dialog(".note-edit-dialog")
       }
       #(
-        Model(
-          ..model,
-          edit_note_name: edit_name,
-          edit_note_content: edit_content,
+        model.LoggedIn(
+          model.LoggedInModel(
+            ..logged_in_model,
+            edit_note_name: edit_name,
+            edit_note_content: edit_content,
+          ),
         ),
         effect,
       )
@@ -201,9 +249,15 @@ pub fn update(model: Model, message: Msg) -> #(Model, Effect(Msg)) {
 
     msg.UserClickedCreateNoteButton(name, content, namespace_id) -> {
       case namespace_id {
-        None -> #(model, effect.none())
+        None -> #(model.LoggedIn(logged_in_model), effect.none())
         Some(n_id) -> #(
-          Model(..model, new_note_content: "", new_note_name: ""),
+          model.LoggedIn(
+            model.LoggedInModel(
+              ..logged_in_model,
+              new_note_content: "",
+              new_note_name: "",
+            ),
+          ),
           note_api.create_note(backend_url, Some(name), content, Some(n_id)),
         )
       }
@@ -211,69 +265,96 @@ pub fn update(model: Model, message: Msg) -> #(Model, Effect(Msg)) {
 
     msg.UserClickedEditNoteButton(note, name, content) -> {
       #(
-        Model(..model, edit_note_content: "", edit_note_name: ""),
+        model.LoggedIn(
+          model.LoggedInModel(
+            ..logged_in_model,
+            edit_note_content: "",
+            edit_note_name: "",
+          ),
+        ),
         note_api.update_note(backend_url, note.note_id, Some(name), content),
       )
     }
 
     msg.LocalStorageReturnedSelectedNamespace(Ok(namespace)) -> #(
-      Model(..model, selected_namespace: Some(namespace)),
+      model.LoggedIn(
+        model.LoggedInModel(
+          ..logged_in_model,
+          selected_namespace: Some(namespace),
+        ),
+      ),
       // NOTE: this loads on initial page load
       note_api.get_namespace_notes(backend_url, namespace.namespace_id),
     )
 
     msg.LocalStorageReturnedSelectedNamespace(Error(err)) -> {
       io.println(string.inspect(err))
-      #(model, effect.none())
+      #(model.LoggedIn(logged_in_model), effect.none())
     }
 
-    msg.ApiReturnedNotes(Ok(notes)) -> #(Model(..model, notes:), effect.none())
+    msg.ApiReturnedNotes(Ok(notes)) -> #(
+      model.LoggedIn(model.LoggedInModel(..logged_in_model, notes:)),
+      effect.none(),
+    )
 
     msg.ApiReturnedNotes(Error(err)) -> {
       io.println(string.inspect(err))
-      #(model, effect.none())
+      #(model.LoggedIn(logged_in_model), effect.none())
     }
 
     msg.ApiReturnedCreatedNote(Ok(note)) -> #(
-      Model(..model, notes: [note, ..model.notes]),
+      model.LoggedIn(
+        model.LoggedInModel(..logged_in_model, notes: [
+          note,
+          ..logged_in_model.notes
+        ]),
+      ),
       effect.none(),
     )
 
     msg.ApiReturnedCreatedNote(Error(err)) -> {
       io.println(string.inspect(err))
-      #(model, effect.none())
+      #(model.LoggedIn(logged_in_model), effect.none())
     }
 
     msg.ApiReturnedNamespaces(Ok(namespaces)) -> #(
-      Model(..model, namespaces: list.append(model.namespaces, namespaces)),
+      model.LoggedIn(
+        model.LoggedInModel(
+          ..logged_in_model,
+          namespaces: list.append(logged_in_model.namespaces, namespaces),
+        ),
+      ),
       effect.none(),
     )
 
     msg.ApiReturnedNamespaces(Error(err)) -> {
       io.println(string.inspect(err))
-      #(model, effect.none())
+      #(model.LoggedIn(logged_in_model), effect.none())
     }
 
     // TODO: replace note, not refetch all of them
     msg.ApiReturnedUpdatedNote(_) -> {
-      let effect = case model.selected_namespace {
+      let effect = case logged_in_model.selected_namespace {
         None -> effect.none()
         Some(namespace) ->
           note_api.get_namespace_notes(backend_url, namespace.namespace_id)
       }
 
-      #(model, effect)
+      #(model.LoggedIn(logged_in_model), effect)
     }
 
     // TODO: implement order switching
-    msg.UserChangedNoteSortOrder(_) -> todo
+    msg.UserChangedNoteSortOrder(_) -> #(
+      model.LoggedIn(logged_in_model),
+      effect.none(),
+    )
 
     msg.UserClickedDeleteButton -> {
       let s = varasto.new(local, note.note_reader(), note.note_writer())
 
       let effect =
         effect.batch([
-          case model.selected_note {
+          case logged_in_model.selected_note {
             None -> effect.none()
             Some(note) -> note_api.delete_note(backend_url, note.note_id)
           },
@@ -284,7 +365,28 @@ pub fn update(model: Model, message: Msg) -> #(Model, Effect(Msg)) {
           }),
         ])
 
-      #(Model(..model, selected_note: None), effect)
+      #(
+        model.LoggedIn(
+          model.LoggedInModel(..logged_in_model, selected_note: None),
+        ),
+        effect,
+      )
     }
+  }
+}
+
+fn update_public_model(
+  model: model.PublicModel,
+  _message: Msg,
+) -> #(model.Model, Effect(Msg)) {
+  #(model.Public(model), effect.none())
+}
+
+pub fn update(model: model.Model, message: Msg) -> #(model.Model, Effect(Msg)) {
+  case model {
+    model.LoggedIn(logged_in_model) ->
+      update_logged_in_model(logged_in_model, message)
+
+    model.Public(public_model) -> update_public_model(public_model, message)
   }
 }

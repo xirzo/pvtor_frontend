@@ -7,7 +7,7 @@ import lustre/event
 import namespace/namespace.{type Namespace}
 import note/note.{type Note}
 import note/note_view
-import pvtor_frontend/model.{type Model}
+import pvtor_frontend/model
 import pvtor_frontend/msg.{type Msg}
 
 fn view_namespace_card(nmspc: Namespace) -> Element(Msg) {
@@ -39,7 +39,7 @@ fn view_content(current_note: Option(Note)) -> Element(Msg) {
   }
 }
 
-fn view_edit_note_dialog(model: Model) -> Element(Msg) {
+fn view_edit_note_dialog(model: model.LoggedInModel) -> Element(Msg) {
   case model.selected_note {
     None -> {
       html.dialog([attribute.class("note-edit-dialog")], [
@@ -81,7 +81,7 @@ fn view_edit_note_dialog(model: Model) -> Element(Msg) {
   }
 }
 
-fn view_new_note_dialog(model: Model) -> Element(Msg) {
+fn view_new_note_dialog(model: model.LoggedInModel) -> Element(Msg) {
   let namespace_id = case model.selected_namespace {
     None -> None
     Some(n) -> Some(n.namespace_id)
@@ -117,7 +117,7 @@ fn view_new_note_dialog(model: Model) -> Element(Msg) {
   ])
 }
 
-pub fn view(model: Model) -> Element(Msg) {
+fn view_logged_in(model: model.LoggedInModel) -> Element(Msg) {
   let sidebar_class = case model.is_mobile_sidebar_toggled {
     True -> "sidebar-open"
     False -> "sidebar"
@@ -184,4 +184,15 @@ pub fn view(model: Model) -> Element(Msg) {
       ]),
     ]),
   ])
+}
+
+fn view_public(_model: model.PublicModel) -> Element(Msg) {
+  html.div([], [html.text("Please log in")])
+}
+
+pub fn view(model: model.Model) -> Element(Msg) {
+  case model {
+    model.LoggedIn(logged_in_model) -> view_logged_in(logged_in_model)
+    model.Public(public_model) -> view_public(public_model)
+  }
 }

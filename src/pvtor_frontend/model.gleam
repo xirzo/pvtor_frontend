@@ -3,7 +3,12 @@ import namespace/namespace.{type Namespace}
 import note/note.{type Note}
 
 pub type Model {
-  Model(
+  LoggedIn(LoggedInModel)
+  Public(PublicModel)
+}
+
+pub type LoggedInModel {
+  LoggedInModel(
     note_search_query: String,
     selected_note: Option(Note),
     selected_namespace: Option(Namespace),
@@ -15,4 +20,8 @@ pub type Model {
     edit_note_content: String,
     edit_note_name: String,
   )
+}
+
+pub type PublicModel {
+  PublicModel(master_password_input: String)
 }
